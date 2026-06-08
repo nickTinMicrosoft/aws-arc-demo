@@ -77,6 +77,8 @@ if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
 # Login with service principal
 az login --service-principal -u $servicePrincipalId -p $servicePrincipalSecret --tenant $tenantId 2>$null | Out-Null
 az account set --subscription $subscriptionId
+az config set extension.dynamic_install_allow_preview=true 2>$null
+az extension add --name connectedmachine --yes 2>$null
 
 # Install the SQL Server extension
 az connectedmachine extension create `

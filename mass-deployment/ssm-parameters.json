@@ -1,0 +1,18 @@
+{
+    "commands": [
+        "$params = @{",
+        "    SubscriptionId = '{{SUBSCRIPTION_ID}}'",
+        "    ResourceGroup = '{{RESOURCE_GROUP}}'",
+        "    TenantId = '{{TENANT_ID}}'",
+        "    Location = '{{LOCATION}}'",
+        "    ServicePrincipalId = '{{SP_APP_ID}}'",
+        "    ServicePrincipalSecret = '{{SP_SECRET}}'",
+        "}",
+        "",
+        "# Download and execute onboarding script",
+        "Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/nickTinMicrosoft/aws-arc-demo/master/mass-deployment/ssm-arc-onboard.ps1' -OutFile 'C:\\arc-onboard.ps1' -UseBasicParsing",
+        "& C:\\arc-onboard.ps1 @params",
+        "Remove-Item C:\\arc-onboard.ps1 -Force"
+    ],
+    "executionTimeout": ["600"]
+}

@@ -1,0 +1,6 @@
+hostname,ip_address,os,sql_version,environment,notes
+SQL-PROD-01,10.0.1.10,Windows Server 2022,SQL Server 2022 Standard,Production,Primary OLTP
+SQL-PROD-02,10.0.1.11,Windows Server 2022,SQL Server 2022 Standard,Production,Reporting
+SQL-PROD-03,10.0.1.12,Windows Server 2019,SQL Server 2019 Enterprise,Production,Data Warehouse
+SQL-DEV-01,10.0.2.10,Windows Server 2022,SQL Server 2022 Developer,Development,Dev/Test
+SQL-STG-01,10.0.3.10,Windows Server 2022,SQL Server 2022 Standard,Staging,Pre-prod validation

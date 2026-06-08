@@ -71,13 +71,64 @@ This creates:
 
 ### 3. Onboard to Azure Arc
 
-RDP into the EC2 instance, then run:
+RDP into the EC2 instance (`mstsc /v:<your-ec2-public-ip>`, login as `Administrator`), then open **PowerShell as Administrator** and run:
 
 ```powershell
-.\scripts\02-onboard-azure-arc.ps1 `
-    -SubscriptionId "your-subscription-id" `
-    -TenantId "your-tenant-id" `
-    -ResourceGroup "arc-demo-rg"
+# Step A: Set your service principal credentials (from .env)
+$env:AZURE_SP_APP_ID = "<your-service-principal-app-id>"
+$env:AZURE_SP_SECRET = "<your-service-principal-secret>"
+
+# Step B: Download and run the onboarding script
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/nickTinMicrosoft/aws-arc-demo/master/scripts/ec2-run-this.ps1" -OutFile "C:\ec2-run-this.ps1" -UseBasicParsing
+& "C:\ec2-run-this.ps1"
+```
+
+**What the script does (takes ~5 minutes):**
+1. Downloads and installs the Azure Connected Machine agent
+2. Connects the EC2 machine to Azure Arc using the service principal
+3. Installs Azure CLI (if not present)
+4. Installs the SQL Server extension so Arc discovers your SQL instance
+
+**Verify onboarding succeeded:**
+- Azure Portal → [Azure Arc > Servers](https://portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.HybridCompute%2Fmachines) → you should see `ArcDemo-SQLServer`
+- Azure Portal → [Azure Arc > SQL Servers](https://portal.azure.com/#blade/HubsExtension/BrowseResource/resourceType/Microsoft.AzureArcData%2FsqlServerInstances) → you should see the SQL Express instance
+
+> **Note:** The SQL Server instance may take up to 5 additional minutes to appear after the machine is registered.
+
+#### Alternative: Manual onboarding (without script)
+
+If you prefer step-by-step:
+
+```powershell
+# 1. Download the Arc agent
+Invoke-WebRequest -Uri "https://aka.ms/AzureConnectedMachineAgent" -OutFile "$env:TEMP\AzureConnectedMachineAgent.msi" -UseBasicParsing
+
+# 2. Install the agent
+Start-Process msiexec.exe -Wait -ArgumentList "/i `"$env:TEMP\AzureConnectedMachineAgent.msi`" /quiet"
+
+# 3. Connect to Azure Arc
+& "$env:ProgramW6432\AzureConnectedMachineAgent\azcmagent.exe" connect `
+    --service-principal-id "<your-sp-app-id>" `
+    --service-principal-secret "<your-sp-secret>" `
+    --resource-group "arc-demo-rg" `
+    --tenant-id "<your-tenant-id>" `
+    --location "eastus" `
+    --subscription-id "<your-subscription-id>" `
+    --cloud "AzureCloud" `
+    --tags "Purpose=ArcDemo,Platform=AWS,OS=WindowsServer2022,SQL=Express2022"
+
+# 4. Verify connection
+& "$env:ProgramW6432\AzureConnectedMachineAgent\azcmagent.exe" show
+
+# 5. Install SQL Server extension (requires Azure CLI)
+az connectedmachine extension create `
+    --machine-name "ArcDemo-SQLServer" `
+    --resource-group "arc-demo-rg" `
+    --name "WindowsAgent.SqlServer" `
+    --type "WindowsAgent.SqlServer" `
+    --publisher "Microsoft.AzureData" `
+    --location "eastus" `
+    --settings '{\"SqlManagement\":{\"IsEnabled\":true}}'
 ```
 
 ### 4. Configure Demo Features

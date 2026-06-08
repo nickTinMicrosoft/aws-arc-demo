@@ -3,6 +3,9 @@
 *.pem
 *.key
 
+# Internal docs
+powerpoint-prompts.md
+
 # OS
 Thumbs.db
 .DS_Store
